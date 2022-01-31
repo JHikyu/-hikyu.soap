@@ -19,11 +19,20 @@ npm i @hikyu/soap
 
 I will use the simple 🐣 require for demonstration
 ```js
-// Simple require
 const soap = require('@hikyu/soap');
 
-// Start server on port 3000
-soap.listen(3000);
+// Run once if the server is started
+soap.once('started', function(data) {
+    console.log(`Server running on port ${data.port} (Listener)`);
+});
+
+// Add GET route to render index.html
+soap.get('/', (req, res) => {
+    res.render('index.html');
+});
+
+// Start the server on port 3000
+soap.init(3000);
 ```
 
 <!-- ## Functions
