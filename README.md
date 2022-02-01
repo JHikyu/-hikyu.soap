@@ -163,4 +163,14 @@ soap.on('send', (data) => {
 soap.on('404', (data) => {
 	console.log(`Path ${data.path} not found (Listener)`);
 });
+
+// GET
+soap.on('get', (data) => {
+	console.log(`GET ${data.path}`);
+});
+
+// POST
+soap.on('post', (data) => {
+	console.log(`POST ${data.path}`);
+});
 ```

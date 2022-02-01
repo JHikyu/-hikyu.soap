@@ -1,29 +1,26 @@
 let routes = {};
 
-function check(path, req, res) {
-    if(routes[path] && routes[path].method === req.method) {
-        emit(path, req, res);
+function check(path, req, res, eventEmitter) {
+    if(routes[path] && routes[path][req.method]) {
+        emit(path, req, res, eventEmitter);
         return true;
     }
     return false;
 }
 
-function emit(path, req, res) {
-    routes[path].callback(req, res);
+function emit(path, req, res, eventEmitter) {
+    routes[path][req.method](req, res);
+    eventEmitter.emit(req.method.toLowerCase(), { path });
 }
 
 function get(path, callback) {
-    routes[path] = {
-        method: 'GET',
-        callback
-    };
+    if(!routes[path]) routes[path] = {};
+    routes[path].GET = callback;
 }
 
 function post(path, callback) {
-    routes[path] = {
-        method: 'POST',
-        callback
-    };
+    if(!routes[path]) routes[path] = {};
+    routes[path].POST = callback;
 }
 
 module.exports = {

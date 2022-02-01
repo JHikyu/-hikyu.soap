@@ -3,53 +3,58 @@ const fs = require('fs');
 const pug = require('pug');
 const ejs = require('ejs');
 
-module.exports = function(request, response, eventEmitter) {
-    response.send = function(content) {
-        response.writeHead(200, { 'Content-Type': 'text/plain' });
-        response.end(content);
+function send(request, response, eventEmitter, content) {
+    response.writeHead(200, { 'Content-Type': 'text/plain' });
+    response.end(content);
 
-        eventEmitter.emit('send', { path: request.url });
-    };
-    response.json = function(content) {
-        response.writeHead(200, { 'Content-Type': 'text/json' });
-        response.end(JSON.stringify(content));
+    eventEmitter.emit('send', { path: request.url });
+}
 
-        eventEmitter.emit('json', { path: request.url });
-    };
-    response.render = function(pathname, data) {
-        if(fs.existsSync(`./views/${pathname}`)) {
-            fs.readFile(`./views/${pathname}`, function (err, html) {
-                if(err) {
-                    response.writeHead(200, { 'Content-Type': 'text/plain' });
-                    response.end('an erorr occured');
-                }
+function json(request, response, eventEmitter, content) {
+    response.writeHead(200, { 'Content-Type': 'text/json' });
+    response.end(JSON.stringify(content));
 
-                if(pathname.endsWith('.ejs')) {
-                    response.writeHead(200, { 'Content-Type': 'text/html' });
+    eventEmitter.emit('json', { path: request.url });
+}
+function render(request, response, eventEmitter, pathname, data) {
+    if(fs.existsSync(`./views/${pathname}`)) {
+        fs.readFile(`./views/${pathname}`, function (err, html) {
+            if(err) {
+                response.writeHead(200, { 'Content-Type': 'text/plain' });
+                response.end('an erorr occured');
+            }
 
-                    const template = ejs.compile(html.toString());
-                    response.write(template(data));
-                    response.end();
-                }
-                else if(pathname.endsWith('.pug')) {
-                    response.writeHead(200, { 'Content-Type': 'text/html' });
+            if(pathname.endsWith('.ejs')) {
+                response.writeHead(200, { 'Content-Type': 'text/html' });
 
-                    fn = pug.compile(html, {filename: `./views/${pathname}`, pretty: true});
-                    response.write(fn(data));
-                    response.end();
-                }
-                else {
-                    response.writeHead(200, { 'Content-Type': 'text/html' });
-                    
-                    response.write(html);
-                    response.end();
-                }
+                const template = ejs.compile(html.toString());
+                response.write(template(data));
+                response.end();
+            }
+            else if(pathname.endsWith('.pug')) {
+                response.writeHead(200, { 'Content-Type': 'text/html' });
 
-                eventEmitter.emit('render', { path: request.url, file: pathname });
-            });
-        } else {
-            response.writeHead(404, { 'Content-Type': 'text/plain' });
-            response.end(`Cannot ${request.method} ${request.url}`);
-        }
-    };
+                fn = pug.compile(html, {filename: `./views/${pathname}`, pretty: true});
+                response.write(fn(data));
+                response.end();
+            }
+            else {
+                response.writeHead(200, { 'Content-Type': 'text/html' });
+                
+                response.write(html);
+                response.end();
+            }
+
+            eventEmitter.emit('render', { path: request.url, file: pathname });
+        });
+    } else {
+        response.writeHead(404, { 'Content-Type': 'text/plain' });
+        response.end(`Cannot ${request.method} ${request.url}`);
+    }
+}
+
+module.exports = {
+    send,
+    json,
+    render
 };

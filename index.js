@@ -6,61 +6,43 @@ const eventEmitter = new ev.EventEmitter();
 
 const ejs = require('ejs');
 const pug = require('pug');
-const mime = require('mime');
 
 const { on, once } = require('./src/events')(eventEmitter); // Event listeners
 const routes = require('./src/routes'); // Routes
 const responseFunctions = require('./src/responseFunctions');
 const requestParameters = require('./src/requestParameters');
-const { readFileData } = require('./src/misc')(fs); // Misc
+const public = require('./src/public');
 
 function init(port) {
-    return new Promise((resolve, reject) => {
-        try {
-            http.createServer(async function (request, response) {  
-                const { pathname } = url.parse(request.url, true);
-                eventEmitter.emit('request', { path: pathname });
+    try {
+        http.createServer(async function (request, response) {
+            const { pathname } = url.parse(request.url, true);
+            eventEmitter.emit('request', { path: pathname });
 
-                // Get query / Post body
-                requestParameters(request);
+            request.query = requestParameters.query(request);
+            request.post = await requestParameters.post(request);
 
-                // Create functions for the user
-                responseFunctions(request, response, eventEmitter);
+            response.send = (content) => responseFunctions.send(request, response, eventEmitter, content);
+            response.json = (content) => responseFunctions.json(request, response, eventEmitter, content);
+            response.render = (pathname, data) => responseFunctions.render(request, response, eventEmitter, pathname, data);
 
-                //? If path exists as route
-                if(routes.check(pathname, request, response)) {
+            if(routes.check(pathname, request, response, eventEmitter)) {}
+            else if(await public(pathname, request, response, eventEmitter)) {}
+            else {
+                response.writeHead(404, { 'Content-Type': 'text/plain' });
+                response.end(`Cannot ${request.method} ${pathname}`);
 
-                }
+                eventEmitter.emit('404', { path: pathname });
+            }
 
-                //? If path exists in public
-                else if(fs.existsSync(`./public${pathname}`)) {
-                    const data = await readFileData(pathname);
-                    
-                    response.writeHead(200, { 'Content-Type': mime.getType(`./public${pathname}`) });
-                    response.end(data);
+        }).listen(port);
 
-                    eventEmitter.emit('load', { path: pathname, 'Content-Type': mime.getType(`./public${pathname}`) });
-                }
+        eventEmitter.emit('started', { port });
 
-                //? If none of these exist
-                else {
-                    response.writeHead(404, { 'Content-Type': 'text/plain' });
-                    response.end(`Cannot ${request.method} ${pathname}`);
-
-                    eventEmitter.emit('404', { path: pathname });
-                }
-
-            }).listen(port);
-            eventEmitter.emit('started', { port });
-            resolve(port);
-        } catch(error) {
-            reject(error);
-        }
-    });
+    } catch(error) {
+        reject(error);
+    }
 }
-
-
-
 
 module.exports = {
     init,
