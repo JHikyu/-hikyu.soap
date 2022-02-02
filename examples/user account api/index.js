@@ -32,8 +32,7 @@ soap.post('/user', async (req, res) => {
 
     // Check if body is correct
     if(!post.name || !post.age) {
-        res.json({ error: 'Missing name or age' });
-        return;
+        return res.json({ error: 'Missing name or age' });
     }
 
     // Add user to list
