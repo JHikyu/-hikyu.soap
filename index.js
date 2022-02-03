@@ -29,9 +29,7 @@ function init(port) {
             if(routes.check(pathname, request, response, eventEmitter)) {}
             else if(await public(pathname, request, response, eventEmitter)) {}
             else {
-                response.writeHead(404, { 'Content-Type': 'text/plain' });
-                response.end(`Cannot ${request.method} ${pathname}`);
-
+                responseFunctions.writeEnd(response, 404, 'text/plain', null, `Cannot ${request.method} ${pathname}`);
                 eventEmitter.emit('404', { path: pathname });
             }
 

@@ -20,41 +20,37 @@ function render(request, response, eventEmitter, pathname, data) {
     if(fs.existsSync(`./views/${pathname}`)) {
         fs.readFile(`./views/${pathname}`, function (err, html) {
             if(err) {
-                response.writeHead(200, { 'Content-Type': 'text/plain' });
-                response.end('an erorr occured');
+                writeEnd(response, 500, 'text/plain', null, 'an erorr occured');
             }
 
             if(pathname.endsWith('.ejs')) {
-                response.writeHead(200, { 'Content-Type': 'text/html' });
-
                 const template = ejs.compile(html.toString());
-                response.write(template(data));
-                response.end();
+                writeEnd(response, 200, 'text/html', template(data), null);
             }
             else if(pathname.endsWith('.pug')) {
-                response.writeHead(200, { 'Content-Type': 'text/html' });
-
                 fn = pug.compile(html, {filename: `./views/${pathname}`, pretty: true});
-                response.write(fn(data));
-                response.end();
+                writeEnd(response, 200, 'text/html', fn(data), null);
             }
             else {
-                response.writeHead(200, { 'Content-Type': 'text/html' });
-                
-                response.write(html);
-                response.end();
+                writeEnd(response, 200, 'text/html', html, null);
             }
 
             eventEmitter.emit('render', { path: request.url, file: pathname });
         });
     } else {
-        response.writeHead(404, { 'Content-Type': 'text/plain' });
-        response.end(`Cannot ${request.method} ${request.url}`);
+        writeEnd(response, 404, 'text/plain', null, `Cannot ${request.method} ${request.url}`);
     }
+}
+
+function writeEnd(response, statusCode, contentType, write, end) {
+    response.writeHead(statusCode, { 'Content-Type': contentType });
+    if(write) response.write(write);
+    response.end(end || null);
 }
 
 module.exports = {
     send,
     json,
-    render
+    render,
+    writeEnd
 };
