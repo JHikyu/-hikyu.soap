@@ -13,6 +13,8 @@ const responseFunctions = require('./src/responseFunctions');
 const requestParameters = require('./src/requestParameters');
 const public = require('./src/public');
 
+
+
 function init(port) {
     try {
         http.createServer(async function (request, response) {
@@ -27,6 +29,7 @@ function init(port) {
             response.render = (pathname, data) => responseFunctions.render(request, response, eventEmitter, pathname, data);
 
             if(routes.check(pathname, request, response, eventEmitter)) {}
+            else if(responseFunctions.smartRoutingOptions.enabled && responseFunctions.smartRoutingGet(pathname, request, response, eventEmitter)) {}
             else if(await public(pathname, request, response, eventEmitter)) {}
             else {
                 responseFunctions.writeEnd(response, 404, 'text/plain', null, `Cannot ${request.method} ${pathname}`);
@@ -47,5 +50,7 @@ module.exports = {
     on,
     once,
     get: routes.get,
-    post: routes.post
+    post: routes.post,
+    smartRouting: responseFunctions.smartRouting,
 };
+

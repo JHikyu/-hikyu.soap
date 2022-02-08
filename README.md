@@ -31,6 +31,7 @@ soap.init(3000);
 
 ## Content
 - [Routes](#routes)
+	- [Smart-Routing](#smart-routing)
 	- [Render](#render)
     - [Send](#send)
     - [JSON](#json)
@@ -49,6 +50,24 @@ soap.init(3000);
 soap.get('path', callback);
 
 soap.post('path', callback);
+```
+
+### Smart-Routing
+Automatically renders pages from the views folder.
+Depends on the requested path
+[Example](https://github.com/JHikyu/-hikyu.soap/tree/master/examples/smart%20routing)
+
+```js
+// Enable smartRouting and set options
+soap.smartRouting({
+    // enabled: true,
+    viewEngine: 'pug',
+    defaultPage: 'landing' // localhost/ => ./views/landing.pug
+});
+
+// localhost/        => ./views/landing.pug
+// localhost/page    => ./views/page.pug
+// localhost/tasks/1 => ./views/tasks/1.pug
 ```
 
 ### Render
